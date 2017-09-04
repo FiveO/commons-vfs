@@ -2,8 +2,10 @@ package org.apache.commons.vfs2.provider.smb2;
 
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
+import com.hierynomus.protocol.transport.TransportException;
 import com.hierynomus.smbj.share.DiskEntry;
 import com.hierynomus.smbj.share.DiskShare;
+import com.hierynomus.smbj.share.File;
 import org.apache.commons.vfs2.*;
 import org.apache.commons.vfs2.provider.AbstractFileName;
 import org.apache.commons.vfs2.provider.AbstractFileSystem;
@@ -33,6 +35,17 @@ public class SMB2FileSystem extends AbstractFileSystem {
                 SMB2ShareAccess.ALL, SMB2CreateDisposition.FILE_OPEN, EnumSet.of(FILE_DIRECTORY_FILE));
         SMB2FileObject smb2FileObject = new SMB2FileObject(file, this);
         return smb2FileObject;
+    }
+
+    @Override
+    public SMB2FileObject resolveFile(final String path) throws FileSystemException {
+        try {
+            DiskEntry file = client.open(path, EnumSet.of(GENERIC_ALL), EnumSet.of(FILE_ATTRIBUTE_NORMAL), SMB2ShareAccess.ALL, SMB2CreateDisposition.FILE_OPEN, EnumSet.of(FILE_DIRECTORY_FILE));
+            SMB2FileObject fileObject = new SMB2FileObject(file, this);
+            return fileObject;
+        } catch(TransportException e) {
+            throw new FileSystemException(e.getMessage());
+        }
     }
 
     protected String getPath() {return client.getSmbPath().getPath();}
